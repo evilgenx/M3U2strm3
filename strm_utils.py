@@ -3,7 +3,7 @@ import os
 import re
 import shutil
 from pathlib import Path
-from typing import Dict, Optional, TYPE_CHECKING
+from typing import Dict, Optional, TYPE_CHECKING, List, Tuple
 from core import extract_year
 
 if TYPE_CHECKING:
@@ -29,6 +29,60 @@ def write_strm_file(base_dir: Path, relative_path: Path, url: str) -> Path:
         logging.error(f"Failed to write STRM {target}: {e}")
         raise
     return target
+
+
+def batch_write_strm_files(base_dir: Path, file_operations: List[Tuple[Path, str]]) -> Tuple[int, int]:
+    """
+    Batch write multiple STRM files efficiently.
+    
+    Args:
+        base_dir: Base directory for STRM files
+        file_operations: List of (relative_path, url) tuples
+        
+    Returns:
+        Tuple of (written_count, skipped_count)
+    """
+    written_count = 0
+    skipped_count = 0
+    
+    # Group operations by parent directory for efficient mkdir
+    dir_operations = {}
+    for relative_path, url in file_operations:
+        target = base_dir / relative_path
+        parent_dir = target.parent
+        
+        if parent_dir not in dir_operations:
+            dir_operations[parent_dir] = []
+        dir_operations[parent_dir].append((target, url))
+    
+    # Create all directories in batch
+    for parent_dir in dir_operations.keys():
+        parent_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Process files in batches
+    for parent_dir, operations in dir_operations.items():
+        for target, url in operations:
+            try:
+                if target.exists():
+                    try:
+                        old = target.read_text(encoding="utf-8", errors="ignore").strip()
+                        if old.strip().lower() == url.strip().lower():
+                            skipped_count += 1
+                            logging.debug(f"STRM unchanged, skip: {target}")
+                            continue
+                    except Exception as e:
+                        logging.warning(f"Error reading existing STRM {target}: {e}")
+                
+                with target.open("w", encoding="utf-8") as f:
+                    f.write(url.strip() + "\n")
+                written_count += 1
+                logging.info(f"STRM written: {target}")
+                
+            except Exception as e:
+                logging.error(f"Failed to write STRM {target}: {e}")
+                # Continue processing other files instead of raising
+    
+    return written_count, skipped_count
 
 
 def cleanup_strm_tree(base_dir: Path, cache: Dict[str, Dict[str, str]]):

@@ -25,6 +25,7 @@ class Config:
     ignore_keywords: Dict[str, List[str]] = None
     emby_api_url: Optional[str] = None
     emby_api_key: Optional[str] = None
+    verbosity: str = "normal"  # quiet, normal, verbose, debug
 
 
 def _coerce_bool(val, default=False) -> bool:
@@ -35,11 +36,44 @@ def _coerce_bool(val, default=False) -> bool:
     return default
 
 
+def _detect_storage_type(path: Path) -> str:
+    """Detect if the storage is SSD or HDD based on path patterns."""
+    try:
+        # Check if path is on an SSD based on common mount points
+        mount_point = path.resolve().anchor
+        if mount_point.startswith('/dev/nvme') or mount_point.startswith('/dev/sda'):
+            return 'ssd'
+        elif mount_point.startswith('/dev/sd'):
+            return 'hdd'
+        # Default to SSD for better performance
+        return 'ssd'
+    except:
+        return 'ssd'
+
+
+def _optimize_max_workers(storage_type: str, cpu_count: int) -> int:
+    """Optimize max_workers based on storage type and CPU count."""
+    if storage_type == 'ssd':
+        # SSD can handle more concurrent I/O operations
+        return min(cpu_count * 4, 32)  # Cap at 32 for very high core counts
+    else:
+        # HDD benefits from fewer concurrent operations
+        return min(cpu_count * 2, 16)  # Cap at 16 for HDD
+
+
 def load_config(path: Path) -> Config:
     data = json.loads(path.read_text(encoding="utf-8"))
     mw = data.get("max_workers")
-    if isinstance(mw, str) and mw.lower() == "max":
-        mw = os.cpu_count() or 8
+    
+    # Determine optimal max_workers if not specified or set to "auto"
+    if mw is None or (isinstance(mw, str) and mw.lower() in ["auto", "max"]):
+        cpu_count = os.cpu_count() or 8
+        # Use output directory to determine storage type
+        output_dir = Path(data.get("output_dir", "."))
+        storage_type = _detect_storage_type(output_dir)
+        mw = _optimize_max_workers(storage_type, cpu_count)
+        print(f"Auto-optimized max_workers: {mw} (detected {storage_type.upper()} storage)")
+    
     if "existing_media_dirs" in data:
         existing_dirs = [Path(p) for p in data["existing_media_dirs"]]
     elif "existing_media_dir" in data:
@@ -65,4 +99,5 @@ def load_config(path: Path) -> Config:
         ignore_keywords=data.get("ignore_keywords", {}),
         emby_api_url=data.get("emby_api_url"),
         emby_api_key=data.get("emby_api_key"),
+        verbosity=data.get("verbosity", "normal"),
     )
