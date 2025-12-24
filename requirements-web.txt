@@ -1,0 +1,23 @@
+# Core M3U2strm3 dependencies
+requests>=2.31.0
+tqdm>=4.66.0
+
+# FastAPI and web dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+jinja2>=3.1.0
+python-multipart>=0.0.6
+aiofiles>=22.1.0
+
+# WebSocket support
+websockets>=11.0.2
+
+# Async task management
+asyncio-throttle>=0.1.2
+
+# Configuration and validation
+pydantic>=2.5.0
+pyyaml>=6.0
+
+# File handling and security
+python-slugify>=8.0.0

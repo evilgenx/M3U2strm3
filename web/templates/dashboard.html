@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}M3U2strm3 Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h2>
+        <p class="text-muted">Monitor and control your M3U2strm3 processing jobs</p>
+    </div>
+</div>
+
+<!-- System Status Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">System Status</h6>
+                        <h4 id="system-status-text">Online</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-server fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Current Job</h6>
+                        <h4 id="current-job-status">None</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-play-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Queue Length</h6>
+                        <h4 id="queue-length">0</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-list fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">STRM Files</h6>
+                        <h4 id="strm-count">0</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-file-video fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Processing Progress
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label">Overall Progress</label>
+                            <div class="progress" style="height: 30px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     id="overall-progress-bar" style="width: 0%">0%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Current Phase</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-circle text-primary"></i>
+                                </span>
+                                <input type="text" class="form-control" id="current-phase" value="Idle" readonly>
+                                <span class="input-group-text" id="phase-progress-text">0%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Current Item</label>
+                            <input type="text" class="form-control" id="current-item" value="Waiting for job..." readonly>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Speed</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="processing-speed" value="0.0 items/sec" readonly>
+                                        <span class="input-group-text">items/sec</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Elapsed Time</label>
+                                    <input type="text" class="form-control" id="elapsed-time" value="00:00:00" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0">Statistics</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <div class="stat-box">
+                                            <i class="fas fa-film text-primary"></i>
+                                            <h6 class="mt-2">Movies</h6>
+                                            <h4 id="stats-movies">0</h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="stat-box">
+                                            <i class="fas fa-tv text-info"></i>
+                                            <h6 class="mt-2">TV Episodes</h6>
+                                            <h4 id="stats-tv">0</h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="stat-box">
+                                            <i class="fas fa-video text-warning"></i>
+                                            <h6 class="mt-2">Documentaries</h6>
+                                            <h4 id="stats-docs">0</h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="stat-box">
+                                            <i class="fas fa-check-circle text-success"></i>
+                                            <h6 class="mt-2">Allowed</h6>
+                                            <h4 id="stats-allowed">0</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-upload fa-3x text-primary mb-3"></i>
+                                <h5>Upload M3U File</h5>
+                                <p class="text-muted">Upload your IPTV playlist file to get started</p>
+                                <a href="/processing" class="btn btn-primary">
+                                    <i class="fas fa-upload me-2"></i>Upload File
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-cog fa-3x text-info mb-3"></i>
+                                <h5>Configure Settings</h5>
+                                <p class="text-muted">Set up your processing preferences and API keys</p>
+                                <a href="/config" class="btn btn-info">
+                                    <i class="fas fa-cog me-2"></i>Configure
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-play fa-3x text-success mb-3"></i>
+                                <h5>Start Processing</h5>
+                                <p class="text-muted">Begin processing your uploaded playlist</p>
+                                <button id="start-processing-btn" class="btn btn-success" disabled>
+                                    <i class="fas fa-play me-2"></i>Start Processing
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Jobs -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Jobs
+                </h5>
+                <button id="refresh-jobs-btn" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-refresh"></i> Refresh
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Job ID</th>
+                                <th>Status</th>
+                                <th>Progress</th>
+                                <th>Start Time</th>
+                                <th>Duration</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jobs-table-body">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No jobs found</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Alert -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="error-alert" class="alert alert-danger alert-dismissible fade show" role="alert" style="display: none;">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <span id="error-message"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize dashboard
+    const dashboard = new M3U2strm3Dashboard();
+    dashboard.init();
+});
+</script>
+{% endblock %}

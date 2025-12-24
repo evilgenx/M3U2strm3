@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  m3u2strm3:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persistent storage for uploads, configs, and logs
+      - ./web/uploads:/app/web/uploads
+      - ./web/configs:/app/web/configs
+      - ./web/logs:/app/web/logs
+      - ./output:/app/output
+      
+      # Optional: Mount external M3U files
+      - ./m3u_files:/app/m3u_files:ro
+      
+      # Optional: Mount existing media directories
+      - ./media/movies:/app/media/movies:ro
+      - ./media/tv:/app/media/tv:ro
+      
+    environment:
+      # Optional environment variables for configuration
+      - TMDB_API_KEY=${TMDB_API_KEY:-}
+      - EMBY_API_URL=${EMBY_API_URL:-}
+      - EMBY_API_KEY=${EMBY_API_KEY:-}
+      
+      # Logging configuration
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # Optional: Add a reverse proxy (nginx) for production
+  # nginx:
+  #   image: nginx:alpine
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./ssl:/etc/nginx/ssl:ro
+  #   depends_on:
+  #     - m3u2strm3
+  #   restart: unless-stopped
+
+volumes:
+  uploads:
+    driver: local
+  configs:
+    driver: local
+  logs:
+    driver: local
+  output:
+    driver: local
