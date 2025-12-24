@@ -1,6 +1,7 @@
 import logging
 import re
 import concurrent.futures
+import argparse
 from pathlib import Path
 from collections import defaultdict
 import requests
@@ -69,7 +70,7 @@ def write_excluded_report(path: Path, excluded, allowed_count: int, enabled: boo
     logging.info(f"Excluded entries written: {path}")
 
 
-def run_pipeline():
+def run_pipeline(force_regenerate=False):
     cfg = config.load_config(Path(__file__).parent / "config.json")
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
@@ -241,18 +242,20 @@ def run_pipeline():
                 logging.debug("Skip existing media: %s", e.raw_title)
                 new_cache[key] = {"url": e.url, "path": None, "allowed": 1}
                 return
-            cached = strm_cache.get(key)
-            if cached:
-                cached_path = Path(cached.get("path") or "").resolve() if cached.get("path") else None
-                if cached.get("url") == url and cached.get("path") and cached_path == abs_path.resolve():
-                    skipped_count += 1
-                    logging.debug("Skip cached (unchanged): %s", e.raw_title)
-                    new_cache[key] = {
-                        "url": cached.get("url"),
-                        "path": cached.get("path"),
-                        "allowed": cached.get("allowed", 1),
-                    }
-                    return
+            # Skip cache check if force_regenerate is enabled
+            if not force_regenerate:
+                cached = strm_cache.get(key)
+                if cached:
+                    cached_path = Path(cached.get("path") or "").resolve() if cached.get("path") else None
+                    if cached.get("url") == url and cached.get("path") and cached_path == abs_path.resolve():
+                        skipped_count += 1
+                        logging.debug("Skip cached (unchanged): %s", e.raw_title)
+                        new_cache[key] = {
+                            "url": cached.get("url"),
+                            "path": cached.get("path"),
+                            "allowed": cached.get("allowed", 1),
+                        }
+                        return
             write_strm_file(output_dir, rel_path, url)
             new_cache[key] = {"url": url, "path": str(abs_path.resolve()), "allowed": 1}
             written_count += 1
@@ -297,4 +300,11 @@ def run_pipeline():
 
 
 if __name__ == "__main__":
-    run_pipeline()
+    parser = argparse.ArgumentParser(description="M3U to STRM converter")
+    parser.add_argument(
+        "--force-regenerate",
+        action="store_true",
+        help="Force regeneration of all STRM files, skipping cache checks",
+    )
+    args = parser.parse_args()
+    run_pipeline(force_regenerate=args.force_regenerate)
